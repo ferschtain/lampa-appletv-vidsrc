@@ -1,4 +1,6 @@
 (function() {
+  'use strict';
+
   const manifest = {
     type: 'video',
     version: '1.0.0',
@@ -25,6 +27,7 @@
 
   function component(object) {
     this.create = () => this.render();
+
     this.render = () => {
       return $('<div class="empty__content"><div class="empty__title">Loading VIDSRC...</div></div>');
     };
@@ -57,6 +60,7 @@
   function startPlugin() {
     Lampa.Component.add('vidsrc-component', component);
     Lampa.Manifest.pl.push(manifest);
+    window.vidsrc_component_plugin = true; // ✅ This line is essential
   }
 
   startPlugin();
