@@ -1,49 +1,63 @@
-(function(){
-  const domains = [
-    'vidsrc.xyz',
-    'vidsrc.net',
-    'vidsrc.pm'
-  ];
-
-  function embedWith(domain, movie) {
-    const imdb = movie.imdb_id;
-    const url = `https://${domain}/embed/movie?imdb=${encodeURIComponent(imdb)}`;
-    Lampa.Player.play({
-      title: movie.title || movie.name || 'Video',
-      url,
-      method: 'play',
-      isonline: true
-    });
-  }
-
-  const plugin = {
-    title: 'VIDSRC',
-    search(params, onComplete) {
-      const movie = params.movie;
-      if (!movie || !movie.imdb_id) {
-        onComplete([]);
-        return;
-      }
-
-      const options = domains.map(dom => ({
-        title: `Server: ${dom}`,
-        img: './img/lampa.svg',
-        movie,
-        domain: dom
-      }));
-
-      onComplete([
-        {
-          title: 'Select embed server',
-          results: options
-        }
-      ]);
+(function() {
+  const manifest = {
+    type: 'video',
+    version: '1.0.0',
+    name: 'VIDSRC Plugin',
+    description: 'Play movies via VIDSRC embed',
+    component: 'vidsrc-component',
+    onContextMenu: function(object) {
+      return {
+        name: 'Watch via VIDSRC',
+        description: 'Open using VIDSRC player'
+      };
     },
-    onSelect(params, close) {
-      close();
-      embedWith(params.element.domain, params.element.movie);
+    onContextLauch: function(object) {
+      Lampa.Activity.push({
+        url: '',
+        title: 'VIDSRC Player',
+        component: 'vidsrc-component',
+        search: object.title,
+        movie: object,
+        page: 1
+      });
     }
   };
 
-  Lampa.Search.addSource(plugin);
+  function component(object) {
+    this.create = () => this.render();
+    this.render = () => {
+      return $('<div class="empty__content"><div class="empty__title">Loading VIDSRC...</div></div>');
+    };
+
+    this.start = () => {
+      const imdb = object.movie.imdb_id;
+      if (!imdb) {
+        Lampa.Noty.show('No IMDb ID found');
+        return;
+      }
+
+      const url = `https://vidsrc.to/embed/movie/${imdb}`;
+
+      Lampa.Player.play({
+        title: object.movie.title || object.movie.name || 'Video',
+        url,
+        method: 'play',
+        isonline: true
+      });
+    };
+
+    this.destroy = () => {};
+    this.pause = () => {};
+    this.stop = () => {};
+    this.back = () => {
+      Lampa.Activity.backward();
+    };
+  }
+
+  function startPlugin() {
+    Lampa.Component.add('vidsrc-component', component);
+    Lampa.Manifest.pl.push(manifest);
+  }
+
+  startPlugin();
 })();
